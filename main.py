@@ -1,19 +1,22 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from sgp4.api import Satrec
 
 df = pd.read_csv(
-    'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle',
+    'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=2le',
     header=None,
     names=['Satellites']
 )
-print(df)
+
+s = str(df[0])
+t = str(df[1])
+satellite = Satrec.twoline2rv(s, t)
+
+jd, fr = 2458826.5, 0.8625
+e, r, v = satellite.sgp4(jd, fr)
+e
+
+print(r)
+print(v)
 
 
-
-# def get_data():
-    # search = input('Search For Satellite: ')
-    # ID = df[df['OBJECT_NAME'] == f'{search}']['NORAD_CAT_ID'].values[0]
-    # data = pd.read_csv(f'https://celestrak.org/NORAD/elements/gp.php?CATNR={ID}&FORMAT=tle')
-    # print(data)
-
-# get_data()
