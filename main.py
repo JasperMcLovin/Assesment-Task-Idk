@@ -3,18 +3,20 @@ import matplotlib.pyplot as plt
 from skyfield.api import load
 import csv
 from skyfield.api import EarthSatellite, load
+import datetime
 from datetime import datetime
+import pytz
 from pytz import timezone
+from skyfield.api import wgs84
 
 ts = load.timescale()
 
-eastern = timezone('US/Eastern')
+australian = timezone('Australia/NSW')
 
-d = datetime(2024, 8, 14, 19, 27, 24)
-e = eastern.localize(d)
+d = datetime(2024, 8, 15, 11, 5, 56)
+e = australian.localize(d)
 t = ts.from_datetime(e)
-dt = t.astimezone_and_leap_second('Australia/NSW')
-print(dt)
+print(t)
 
 max_days = 7.0
 name = 'satellites.csv'
@@ -34,11 +36,11 @@ print('Loaded', len(sats), 'satellites')
 by_name = {sat.name: sat for sat in sats}
 satellite = by_name['ISS (ZARYA)']
 print(satellite)
+
 print(satellite.epoch.utc_jpl())
-t = ts.utc(dt)
 
 days = t - satellite.epoch
 print('{:.3f} days away from epoch'.format(days))
 
 if abs(days) > 14:
-    satellites = load.tle_file('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle', reload=True)
+    satellites = load.tle_file(stations_url, reload=True)
