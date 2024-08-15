@@ -44,13 +44,9 @@ t0 = t
 t1 = t + 1
 t, events = satellite.find_events(bluffton, t0, t1, altitude_degrees=30.0)
 event_names = 'rise above 30°', 'culminate', 'set below 30°'
-
-eph = load('de421.bsp')
-sunlit = satellite.at(t).is_sunlit(eph)
-
-for ti, event, sunlit_flag in zip(t, events, sunlit):
+for ti, event in zip(t, events):
     name = event_names[event]
-    state = ('in shadow', 'in sunlight')[sunlit_flag]
-    print('{:22} {:15} {}'.format(
-        ti.utc_strftime('%Y %b %d %H:%M:%S'), name, state,
-    ))
+    print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+
+geocentric = satellite.at(t)
+print(geocentric.position.km)
