@@ -46,7 +46,7 @@ t, events = satellite.find_events(bluffton, t0, t1, altitude_degrees=30.0)
 event_names = 'rise above 30°', 'culminate', 'set below 30°'
 
 eph = load('de421.bsp')
-sunlit = satellite.at(t, t1).is_sunlit(eph)
+sunlit = satellite.at(t).is_sunlit(eph)
 
 for ti, event, sunlit_flag in zip(t, events, sunlit):
     name = event_names[event]
