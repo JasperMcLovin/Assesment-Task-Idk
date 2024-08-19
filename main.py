@@ -8,8 +8,9 @@ import pytz
 from pytz import timezone
 from skyfield.api import wgs84
 import tkinter as tk
+from tkinter import *
 from tkinter import ttk
-from tkinter.messagebox import showinfo
+from tkinter.messagebox import showerror, showwarning, showinfo
 
 ts = load.timescale()
 t = ts.now()
@@ -27,29 +28,63 @@ with load.open('satellites.csv', mode='r') as f:
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
 names.sort()
 
-root = tk.Tk()
+root = Tk()
+root.title('The Worst Program Ever')
+root.geometry("500x500")
 
-root.geometry('300x200')
-root.resizable(False, False)
-root.title('Combobox Widget')
+def update(data):
+	my_list.delete(0, END)
 
-label = ttk.Label(text="Please select a Satellite:")
-label.pack(fill=tk.X, padx=5, pady=5)
+	for item in data:
+		my_list.insert(END, item)
 
-selected_sat = tk.StringVar()
-sat_cb = ttk.Combobox(root, textvariable=selected_sat)
+def fillout(e):
+	my_entry.delete(0, END)
 
-sat_cb['values'] = names
+	my_entry.insert(0, my_list.get(ANCHOR))
+	global selected
+	selected = my_list.get(ANCHOR)
 
-sat_cb.pack(fill=tk.X, padx=5, pady=5)
+def check(e):
+	typed = my_entry.get()
 
-def sat_changed(event):
-    """ handle the sat changed event """
-    showinfo(
-        title='Result',
-        message=f'You selected {selected_sat.get()}!'
-    )
+	if typed == '':
+		data = names
+	else:
+		data = []
+		for item in names:
+			if typed.lower() in item.lower():
+				data.append(item)
 
-sat_cb.bind('<<ComboboxSelected>>', sat_changed)
+	update(data)				
+
+my_label = Label(root, text="Search For A Satellite",
+	font=("Helvetica", 14), fg="grey")
+
+my_label.pack(pady=20)
+
+my_entry = Entry(root, font=("Helvetica", 20))
+my_entry.pack()
+
+my_list = Listbox(root, width=50)
+my_list.pack(pady=40)
+
+update(names)
+
+my_list.bind("<<ListboxSelect>>", fillout)
+
+my_entry.bind("<KeyRelease>", check)
+
+def get_info():
+    by_name = {sat.name: sat for sat in sats}
+    satellite = by_name[f'{selected}']
+
+show_data = ttk.Button(
+   root, 
+   text="Display data for satellite", 
+   command=get_info
+)
+
+show_data.pack(pady=45)
 
 root.mainloop()
