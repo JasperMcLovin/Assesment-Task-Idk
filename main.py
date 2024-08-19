@@ -22,6 +22,7 @@ if not load.exists(name) or load.days_old(name) >= max_days:
 with load.open('satellites.csv', mode='r') as f:
     data = list(csv.DictReader(f))
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
+names = pd.read_csv('satellites.csv', columns)
 
 root = tk.Tk()
 
@@ -35,7 +36,7 @@ label.pack(fill=tk.X, padx=5, pady=5)
 selected_sat = tk.StringVar()
 sat_cb = ttk.Combobox(root, textvariable=selected_sat)
 
-sat_cb['values'] = {sat.name: sat for sat in sats}
+sat_cb['values'] = names
 
 sat_cb['state'] = 'readonly'
 
