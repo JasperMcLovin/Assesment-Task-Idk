@@ -22,7 +22,7 @@ if not load.exists(name) or load.days_old(name) >= max_days:
 with load.open('satellites.csv', mode='r') as f:
     data = list(csv.DictReader(f))
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
-names = pd.read_csv('satellites.csv', columns)
+
 
 root = tk.Tk()
 
