@@ -1,6 +1,5 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from skyfield.api import load
 import csv
 from skyfield.api import EarthSatellite, load
 import datetime
@@ -8,45 +7,47 @@ from datetime import datetime
 import pytz
 from pytz import timezone
 from skyfield.api import wgs84
+import tkinter as tk
+from tkinter import ttk
+from tkinter.messagebox import showinfo
 
 ts = load.timescale()
 t = ts.now()
-
 max_days = 7.0
 name = 'satellites.csv'
-
 base = 'https://celestrak.org/NORAD/elements/gp.php'
 url = base + '?GROUP=active&FORMAT=csv'
-
 if not load.exists(name) or load.days_old(name) >= max_days:
     load.download(url, filename=name)
-
 with load.open('satellites.csv', mode='r') as f:
     data = list(csv.DictReader(f))
-
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
-print('Loaded', len(sats), 'satellites')
 
-by_name = {sat.name: sat for sat in sats}
-satellite = by_name['ISS (ZARYA)']
-print(satellite)
+root = tk.Tk()
 
-print(satellite.epoch.utc_jpl())
+root.geometry('300x200')
+root.resizable(False, False)
+root.title('Combobox Widget')
 
-days = t - satellite.epoch
-print('{:.3f} days away from epoch'.format(days))
+label = ttk.Label(text="Please select a Satellite:")
+label.pack(fill=tk.X, padx=5, pady=5)
 
-if abs(days) > 14:
-    satellites = load.tle_file('https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle', reload=True)
+selected_sat = tk.StringVar()
+sat_cb = ttk.Combobox(root, textvariable=selected_sat)
 
-bluffton = wgs84.latlon(+40.8939, -83.8917)
-t0 = t
-t1 = t + 1
-t, events = satellite.find_events(bluffton, t0, t1, altitude_degrees=30.0)
-event_names = 'rise above 30°', 'culminate', 'set below 30°'
-for ti, event in zip(t, events):
-    name = event_names[event]
-    print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+sat_cb['values'] = {sat.name: sat for sat in sats}
 
-geocentric = satellite.at(t)
-print(geocentric.position.km)
+sat_cb['state'] = 'readonly'
+
+sat_cb.pack(fill=tk.X, padx=5, pady=5)
+
+def sat_changed(event):
+    """ handle the sat changed event """
+    showinfo(
+        title='Result',
+        message=f'You selected {selected_sat.get()}!'
+    )
+
+sat_cb.bind('<<ComboboxSelected>>', sat_changed)
+
+root.mainloop()
