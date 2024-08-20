@@ -25,19 +25,17 @@ with load.open('satellites.csv', mode='r') as f:
         names.append(row['OBJECT_NAME'])
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
 names.sort()
-def makeint(x):
-    return {int(k): v for k, v in x}
 def location_lookup():
   try:
     return json.load(urlopen('http://ipinfo.io/json'))
   except urlopen.HTTPError:
     return False
 location = location_lookup()
-location = location['loc']
-print(json.loads(location, object_hook=makeint))
+bluffton = str(location['loc'])
+print(bluffton)
 # bluffton = wgs84.latlon('{:.3f}'.format(location['loc']))
-t0 = t
-t1 = t+1
+t0 = ts.now()
+t1 = ts.now()+1
 
 root = Tk()
 root.title('The Worst Program Ever')
