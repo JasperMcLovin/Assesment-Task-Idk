@@ -1,20 +1,18 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import csv
-from skyfield.api import EarthSatellite, load
-import datetime
-from datetime import datetime
-import pytz
-from pytz import timezone
-from skyfield.api import wgs84
+from skyfield.api import *
+from datetime import *
+from pytz import *
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-from tkinter.messagebox import showerror, showwarning, showinfo
+import json
+from urllib.request import *
 
 ts = load.timescale()
 t = ts.now()
-max_days = 7.0
+max_days = 1.0
 names = []
 name = 'satellites.csv'
 base = 'https://celestrak.org/NORAD/elements/gp.php'
@@ -27,6 +25,15 @@ with load.open('satellites.csv', mode='r') as f:
         names.append(row['OBJECT_NAME'])
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
 names.sort()
+def location_lookup():
+  try:
+    return json.load(urlopen('http://ipinfo.io/json'))
+  except urlopen.HTTPError:
+    return False
+location = location_lookup()
+bluffton = wgs84.latlon(location['loc'])
+t0 = t
+t1 = t+1
 
 root = Tk()
 root.title('The Worst Program Ever')
@@ -76,8 +83,31 @@ my_list.bind("<<ListboxSelect>>", fillout)
 my_entry.bind("<KeyRelease>", check)
 
 def get_info():
-    by_name = {sat.name: sat for sat in sats}
-    satellite = by_name[f'{selected}']
+	new_win = Toplevel(root)
+	new_win.title('Satellite Data')
+	new_win.geometry('400x400')
+	Label(new_win, text=f"Data For {selected}",font=("Helvetica", 20)).pack(pady=20)
+	my_list = Listbox(new_win, width=50)
+	my_list.pack(pady=30)
+
+	by_name = {sat.name: sat for sat in sats}
+	satellite = by_name[f'{selected}']
+	days = t - satellite.epoch
+	if days > 0:
+		time_epoch = '{:.3f} days past epoch'.format(days)
+	else:
+		time_epoch = '{:.3f} days until epoch'.format(abs(days))
+	geocentric = satellite.at(t)
+	lat, lon = wgs84.latlon_of(geocentric)
+	t, events = satellite.find_events(bluffton, t0, t1, altitude_degrees=30.0)
+	event_names = 'rise above 30°', 'culminate', 'set below 30°'
+	for ti, event in zip(t, events):
+		name = event_names[event]
+		print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+	
+	my_list.insert(END, time_epoch)
+	my_list.insert(END, f'Latitude: {lat}')
+	my_list.insert(END, f'Longitude: {lon}')
 
 show_data = ttk.Button(
    root, 
