@@ -25,21 +25,20 @@ with load.open('satellites.csv', mode='r') as f:
         names.append(row['OBJECT_NAME'])
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
 names.sort()
-def add_plus(string, index):
-	if string[index] != '-':
-		return string[:index] + '+' + string[index:]
 def location_lookup():
   try:
     return json.load(urlopen('http://ipinfo.io/json'))
   except urlopen.HTTPError:
     return False
 location = location_lookup()
-bluffton = str(location['loc'])
-bluffton = add_plus(bluffton, 0)
-bluffton = add_plus(bluffton, 5)
-print(bluffton)
+place = str(location['loc'])
+comma = place.index(',')
+lat = float(place.split(',')[0])
+lon = float(place.split(',')[1])
+bluffton = wgs84.latlon(lat, lon)
 t0 = t
 t1 = t+1
+eph = load('de421.bsp')
 
 root = Tk()
 root.title('The Worst Program Ever')
@@ -95,7 +94,7 @@ def get_info():
 	Label(new_win, text=f"Data For {selected}",font=("Helvetica", 20)).pack(pady=20)
 	my_list = Listbox(new_win, width=50)
 	my_list.pack(pady=30)
-
+	
 	t = ts.now()
 	by_name = {sat.name: sat for sat in sats}
 	satellite = by_name[f'{selected}']
@@ -106,15 +105,24 @@ def get_info():
 		time_epoch = '{:.3f} days until epoch'.format(abs(days))
 	geocentric = satellite.at(t)
 	lat, lon = wgs84.latlon_of(geocentric)
+	sunlit = satellite.at(t).is_sunlit(eph)
+
+	my_list.insert(END, time_epoch)
+	my_list.insert(END, f'Latitude: {lat}')
+	my_list.insert(END, f'Longitude: {lon}')
+
 	t, events = satellite.find_events(bluffton, t0, t1, altitude_degrees=30.0)
 	event_names = 'rise above 30°', 'culminate', 'set below 30°'
 	for ti, event in zip(t, events):
 		name = event_names[event]
-		print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
+		my_list.insert(END, (ti.utc_strftime('%Y %b %d %H:%M:%S'), name))
+	for ti, event, sunlit_flag in zip(t, events, sunlit):
+		name = event_names[event]
+		state = ('in shadow', 'in sunlight')[sunlit_flag]
+		print('{:22} {:15} {}'.format(
+        	my_list.insert(END, (ti.utc_strftime('%Y %b %d %H:%M:%S'), name, state,))
+    ))
 	
-	my_list.insert(END, time_epoch)
-	my_list.insert(END, f'Latitude: {lat}')
-	my_list.insert(END, f'Longitude: {lon}')
 
 show_data = ttk.Button(
    root, 
