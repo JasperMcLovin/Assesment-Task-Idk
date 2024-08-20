@@ -25,6 +25,9 @@ with load.open('satellites.csv', mode='r') as f:
         names.append(row['OBJECT_NAME'])
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
 names.sort()
+def add_plus(string, index):
+	if string[index] != '-':
+		return string[:index] + '+' + string[index:]
 def location_lookup():
   try:
     return json.load(urlopen('http://ipinfo.io/json'))
@@ -32,10 +35,11 @@ def location_lookup():
     return False
 location = location_lookup()
 bluffton = str(location['loc'])
+bluffton = add_plus(bluffton, 0)
+bluffton = add_plus(bluffton, 5)
 print(bluffton)
-# bluffton = wgs84.latlon('{:.3f}'.format(location['loc']))
-t0 = ts.now()
-t1 = ts.now()+1
+t0 = t
+t1 = t+1
 
 root = Tk()
 root.title('The Worst Program Ever')
@@ -92,6 +96,7 @@ def get_info():
 	my_list = Listbox(new_win, width=50)
 	my_list.pack(pady=30)
 
+	t = ts.now()
 	by_name = {sat.name: sat for sat in sats}
 	satellite = by_name[f'{selected}']
 	days = t - satellite.epoch
