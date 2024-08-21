@@ -9,6 +9,8 @@ from tkinter import *
 from tkinter import ttk
 import json
 from urllib.request import *
+from matplotlib.dates import HourLocator, DateFormatter
+import numpy as np
 
 ts = load.timescale()
 t = ts.now()
@@ -38,6 +40,17 @@ lon = float(place.split(',')[1])
 bluffton = wgs84.latlon(lat, lon)
 t0 = t
 t1 = t+1
+earth_radius_km = 6371.0
+fig, ax = plt.subplots()
+def label_dates_and_hours(axes):
+    axes.xaxis.set_major_locator(HourLocator([0]))
+    axes.xaxis.set_minor_locator(HourLocator([0, 6, 12, 18]))
+    axes.xaxis.set_major_formatter(DateFormatter('0h\n%Y %b %d\n%A'))
+    axes.xaxis.set_minor_formatter(DateFormatter('%Hh'))
+    for label in ax.xaxis.get_ticklabels(which='both'):
+        label.set_horizontalalignment('left')
+    axes.yaxis.set_major_formatter('{x:.0f} km')
+    axes.tick_params(which='both', length=0)
 
 root = Tk()
 root.title('The Worst Program Ever')
@@ -97,6 +110,7 @@ def get_info():
 	t = ts.now()
 	by_name = {sat.name: sat for sat in sats}
 	satellite = by_name[f'{selected}']
+	tf = ts.tt_jd(np.arange(satellite.epoch.tt - 2.0, satellite.epoch.tt + 2.0, 0.005))
 	days = t - satellite.epoch
 	if days > 0:
 		time_epoch = '{:.3f} days past epoch'.format(days)
@@ -122,8 +136,17 @@ def get_info():
 		my_list.insert(END, '{:22} {:15} {}'.format(
         	ti.utc_strftime('%Y %b %d %H:%M:%S'), name, state,
     ))
-	
-	
+	g = satellite.at(tf)
+	valid = [m is None for m in g.message]
+	fig, ax = plt.subplots()
+	x = tf.utc_datetime()
+	y = np.where(valid, g.distance().km - earth_radius_km, np.nan)
+	ax.plot(x, y)
+	ax.grid(which='both')
+	ax.set(title=f'{selected}: altitude above sea level', xlabel='UTC')
+	label_dates_and_hours(ax)
+	plt.show()
+
 
 show_data = ttk.Button(
    root, 
