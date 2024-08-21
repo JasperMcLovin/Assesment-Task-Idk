@@ -38,7 +38,6 @@ lon = float(place.split(',')[1])
 bluffton = wgs84.latlon(lat, lon)
 t0 = t
 t1 = t+1
-eph = load('de421.bsp')
 
 root = Tk()
 root.title('The Worst Program Ever')
@@ -105,7 +104,6 @@ def get_info():
 		time_epoch = '{:.3f} days until epoch'.format(abs(days))
 	geocentric = satellite.at(t)
 	lat, lon = wgs84.latlon_of(geocentric)
-	sunlit = satellite.at(t).is_sunlit(eph)
 
 	my_list.insert(END, time_epoch)
 	my_list.insert(END, f'Latitude: {lat}')
@@ -115,13 +113,16 @@ def get_info():
 	event_names = 'rise above 30°', 'culminate', 'set below 30°'
 	for ti, event in zip(t, events):
 		name = event_names[event]
-		my_list.insert(END, (ti.utc_strftime('%Y %b %d %H:%M:%S'), name))
+		ti.utc_strftime('%Y %b %d %H:%M:%S'), name
+	eph = load('de421.bsp')
+	sunlit = satellite.at(t).is_sunlit(eph)
 	for ti, event, sunlit_flag in zip(t, events, sunlit):
 		name = event_names[event]
 		state = ('in shadow', 'in sunlight')[sunlit_flag]
-		print('{:22} {:15} {}'.format(
-        	my_list.insert(END, (ti.utc_strftime('%Y %b %d %H:%M:%S'), name, state,))
+		my_list.insert(END, '{:22} {:15} {}'.format(
+        	ti.utc_strftime('%Y %b %d %H:%M:%S'), name, state,
     ))
+	
 	
 
 show_data = ttk.Button(
