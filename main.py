@@ -162,12 +162,12 @@ def get_info():
 
 	g = satellite.at(tf)
 	valid = [m is None for m in g.message]
-	x = tf.utc_datetime()
-	y = np.where(valid, g.distance().km - earth_radius_km, np.nan)
-	ax.plot(x, y)
-	x = satellite.epoch.utc_datetime()
-	y = satellite.at(tf).distance().km - earth_radius_km
-	ax.plot(x, y, 'k.')
+	x1 = tf.utc_datetime()
+	y1 = np.where(valid, g.distance().km - earth_radius_km, np.nan)
+	ax.plot(x1, y1)
+	x2 = tf.utc_datetime()
+	y2 = difference.at(tf)
+	ax.plot(x2, y2)
 	ax.grid(which='both')
 	ax.set(title=f'{selected}: altitude above sea level', xlabel='UTC')
 	label_dates_and_hours(ax)
