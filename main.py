@@ -31,8 +31,8 @@ names.sort()
 def location_lookup():
   try:
     return json.load(urlopen('http://ipinfo.io/json'))
-  except urlopen.HTTPError:
-    return False
+  except:
+    return {"loc": "0, 0"}
 location = location_lookup()
 place = str(location['loc'])
 comma = place.index(',')
@@ -95,7 +95,7 @@ def get_info():
 	new_win.title('Satellite Data')
 	new_win.geometry('400x400')
 	Label(new_win, text=f"Data For {selected}",font=("Helvetica", 20)).pack(pady=20)
-	my_list = Listbox(new_win, width=50)
+	my_list = Listbox(new_win, width=70)
 	my_list.pack(pady=30)
 	
 	t = ts.now()
@@ -149,7 +149,7 @@ def get_info():
 	my_list.insert(END, f'Azimuth: {az}')
 	my_list.insert(END, 'Distance: {:.1f} km'.format(distance.km))
 
-	fig, ax = plt.subplots(clear=True)
+	fig, ax = plt.subplots()
 	def label_dates_and_hours(axes):
 		axes.xaxis.set_major_locator(HourLocator([0]))
 		axes.xaxis.set_minor_locator(HourLocator([0, 6, 12, 18]))
@@ -165,9 +165,6 @@ def get_info():
 	x1 = tf.utc_datetime()
 	y1 = np.where(valid, g.distance().km - earth_radius_km, np.nan)
 	ax.plot(x1, y1)
-	x2 = tf.utc_datetime()
-	y2 = difference.at(tf)
-	ax.plot(x2, y2)
 	ax.grid(which='both')
 	ax.set(title=f'{selected}: altitude above sea level', xlabel='UTC')
 	label_dates_and_hours(ax)
